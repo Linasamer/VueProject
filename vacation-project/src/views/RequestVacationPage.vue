@@ -4,11 +4,11 @@
     <form @submit.prevent="submitRequest">
       <div>
         <label for="start-date">Start Date:</label>
-        <input type="date" v-model="startDate" @change="calculateDays" id="start-date" required />
+        <input type="date" v-model="startDate" @change="updateModel" id="start-date" required />
       </div>
       <div>
         <label for="end-date">End Date:</label>
-        <input type="date" v-model="endDate" @change="calculateDays" id="end-date" required />
+        <input type="date" v-model="endDate" @change="updateModel" id="end-date" required />
       </div>
       <div>
         <label for="num-days">Number of Days:</label>
@@ -16,50 +16,67 @@
       </div>
       <div>
         <label for="vacation-type">Type of Vacation:</label>
-        <select v-model="vacationType" id="vacation-type" required>
-          <option value="" disabled>Select Vacation Type</option>
-          <option value="annual">Annual Leave</option>
-          <option value="sick">Sick Leave</option>
-          <option value="maternity">Maternity Leave</option>
-          <option value="paternity">Paternity Leave</option>
+        <select v-model="vacationType" @change="updateModel" id="vacation-type" required>
+          <option value="" disabled selected>Select Vacation Type</option>
+       <option value="Annual">Annual</option>
+          <option value="Sick">Sick</option>
+          <option value="Unpaid">Unpaid</option>
+          <option value="Casual">Casual</option>
         </select>
       </div>
       <button type="submit">Submit Request</button>
     </form>
   </div>
 </template>
-
 <script>
+import axios from 'axios';
+import { VacationRequest } from '@/models/VacationRequest';
+import { VacationResponse } from '@/models/VacationResponse';
+
 export default {
   data() {
     return {
       startDate: '',
       endDate: '',
-      numDays: 0,
       vacationType: '',
+      numDays: 0,
+      vacationRequest: null,
+      vacationResponse: null,  // Add a property to store the response
     };
   },
   methods: {
-    calculateDays() {
-      if (this.startDate && this.endDate) {
-        const start = new Date(this.startDate);
-        const end = new Date(this.endDate);
-        const timeDiff = end - start;
-
-        if (timeDiff >= 0) {
-          this.numDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
-        } else {
-          this.numDays = 0;
-          alert('End date must be after start date.');
-        }
-      } else {
-        this.numDays = 0;
+    updateModel() {
+      if (this.startDate && this.endDate && this.vacationType) {
+        this.vacationRequest = new VacationRequest(this.startDate, this.endDate, this.vacationType);
+        this.numDays = this.vacationRequest.numDays;
       }
     },
-    submitRequest() {
-      if (this.numDays > 0 && this.vacationType) {
-        alert(`Vacation request submitted for ${this.numDays} days as ${this.vacationType}.`);
-        // Handle submission logic here
+    async submitRequest() {
+      if (this.vacationRequest) {
+        try {
+          const response = await axios.post(
+            'http://psuite:81/home/Development/app/entityRestService/api/MyCompany4VacationProcess/entities/VacationEntity',
+            this.vacationRequest.toJSON(),
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'CSRFToken': 'Development',
+                'SAMLart': localStorage.getItem('token'), // Include SAMLart token
+              },
+            }
+          );
+
+          // Process the response using the VacationResponse model
+          this.vacationResponse = new VacationResponse(response.data);
+
+          console.log('Vacation request submitted successfully:', this.vacationResponse);
+          alert(`Vacation request submitted successfully. Request ID: ${this.vacationResponse.id}`);
+
+          this.$router.push('/user-details');
+        } catch (error) {
+          console.error('Error submitting vacation request:', error);
+          alert('An error occurred while submitting the vacation request. Please try again.');
+        }
       } else {
         alert('Please fill out all fields correctly.');
       }
@@ -67,6 +84,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 /* Container Styling */

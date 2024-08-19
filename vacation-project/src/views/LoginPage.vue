@@ -10,6 +10,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -18,16 +20,67 @@ export default {
     };
   },
   methods: {
-    login() {
-      if (this.username === 'lina' && this.password === 'lina') {
+    async login() {
+      try {
+        // First step: Get the ticket
+        const response1 = await axios.post('http://psuite:8080/otdsws/rest/authentication/credentials', {
+          userName: this.username,
+          password: this.password,
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const ticket = response1.data.ticket;
+
+        // Second step: Use the ticket in the SOAP request
+        const soapBody = `<SOAP:Envelope xmlns:SOAP="http://schemas.xmlsoap.org/soap/envelope/">
+                            <SOAP:Header>
+                              <OTAuthentication xmlns="urn:api.bpm.opentext.com">
+                                <AuthenticationToken>${ticket}</AuthenticationToken>
+                              </OTAuthentication>
+                            </SOAP:Header>
+                            <SOAP:Body>
+                              <samlp:Request xmlns:samlp="urn:oasis:names:tc:SAML:1.0:protocol" MajorVersion="1" MinorVersion="1">
+                                <samlp:AuthenticationQuery>
+                                  <saml:Subject xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion">
+                                    <saml:NameIdentifier Format="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified"/>
+                                  </saml:Subject>
+                                </samlp:AuthenticationQuery>
+                              </samlp:Request>
+                            </SOAP:Body>
+                          </SOAP:Envelope>`;
+
+        const response2 = await axios.post('http://psuite:81/home/Development/com.eibus.web.soap.Gateway.wcp', soapBody, {
+          headers: {
+            'Content-Type': 'application/xml',
+          },
+        });
+
+        // Extract the necessary information from the response
+        const token = extractTokenFromResponse(response2.data);
+
+        // Store the token for future requests
+        localStorage.setItem('token', token);
         localStorage.setItem('user', this.username);
         this.$router.push('/user-details');
-      } else {
-        alert('Invalid credentials');
+      } catch (error) {
+        console.error('Login failed:', error);
+        alert('Invalid credentials or an error occurred.');
       }
     },
   },
 };
+
+function extractTokenFromResponse(soapResponse) {
+  // Use a DOMParser to extract the token from the SOAP response
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(soapResponse, 'text/xml');
+  const token = xmlDoc.getElementsByTagName('samlp:AssertionArtifact')[0].textContent;
+  return token;
+}
+
 </script>
 
 <style scoped>
@@ -100,4 +153,3 @@ input::placeholder {
   margin-top: 10px;
 }
 </style>
-
