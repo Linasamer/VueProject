@@ -29,8 +29,11 @@
       <ul>
         <li v-for="task in tasks" :key="task.id">
           <router-link :to="{ name: 'TaskDetails', params: { id: task.id, isManager: activeTab === 'manager' } }">
-            {{ task.Subject }} - {{ getTaskState(task.State) }}<br />
-            <small>Source: {{ task.SourceName }}</small>
+            <div class="task-item">
+              <span class="task-subject">{{ task.Subject }}</span>
+              <span class="task-state">{{ getTaskState(task.State) }}</span>
+              <small class="task-source">Source: {{ task.SourceName }}</small>
+            </div>
           </router-link>
         </li>
       </ul>
@@ -42,9 +45,11 @@
       <p>Total Vacations: {{ vacations.length }}</p>
       <ul>
         <li v-for="vacation in vacations" :key="vacation.id">
-          <p class="vacation-type">{{ vacation.Type }} Vacation - {{ vacation.Status }}</p>
-          <p>Dates: {{ vacation.StartDate }} to {{ vacation.EndDate }}</p>
-          <p>Number of Days: {{ vacation.NumberOfDays || 'N/A' }}</p>
+          <div class="vacation-item">
+            <span class="vacation-type">{{ vacation.Type }} Vacation - {{ vacation.Status }}</span>
+            <span class="vacation-dates">Dates: {{ vacation.StartDate }} to {{ vacation.EndDate }}</span>
+            <span class="vacation-days">Number of Days: {{ vacation.NumberOfDays || 'N/A' }}</span>
+          </div>
         </li>
       </ul>
     </div>
@@ -62,7 +67,7 @@ export default {
   data() {
     return {
       username: localStorage.getItem('user') || 'Guest',
-      activeTab: 'vacations', // Default to HR tab
+      activeTab: 'vacations', 
       tasks: [],
       vacations: [],
       isLoading: false,
@@ -146,40 +151,47 @@ export default {
 
 <style scoped>
 .user-details {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #f3f4f7, #e9ecf2);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  transition: background 0.3s;
 }
 
 .header {
-  font-size: 28px;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 32px;
+  font-weight: bold;
+  color: #4a4a4a;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .welcome {
-  font-size: 18px;
-  color: #555;
-  margin-bottom: 20px;
+  font-size: 20px;
+  color: #6a6a6a;
+  text-align: center;
+  margin-bottom: 30px;
 }
 
 .tabs {
   display: flex;
-  margin-bottom: 20px;
+  justify-content: space-around;
+  margin-bottom: 30px;
   border-bottom: 2px solid #007bff;
 }
 
 .tabs button {
-  flex: 1;
-  padding: 12px;
+  padding: 15px 25px;
   font-size: 16px;
+  font-weight: 500;
+  color: staff;
   cursor: pointer;
+  background: none;
   border: none;
-  background-color: #f1f1f1;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  border-radius: 8px 8px 0 0;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .tabs button.active {
@@ -187,67 +199,114 @@ export default {
   color: white;
 }
 
-.tabs button:hover {
-  background-color: #0056b3;
-  color: white;
+.tabs button:hover:not(.active) {
+  background-color: #dfe6f3;
 }
 
 .loading, .error, .no-data {
-  color: #d9534f;
+  font-size: 18px;
   font-weight: bold;
   text-align: center;
-  margin: 20px 0;
+  margin: 30px 0;
+  color: #d9534f;
 }
 
 .tasks, .vacations {
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .tasks h2, .vacations h2 {
-  font-size: 22px;
+  font-size: 24px;
   color: #333;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .tasks p, .vacations p {
-  color: #666;
+  color: #555;
 }
 
 ul {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 li {
-  padding: 12px;
-  margin-bottom: 10px;
-  background-color: #fff;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s;
 }
 
-li:nth-child(even) {
-  background-color: #f9f9f9;
+li:hover {
+  transform: translateY(-5px);
 }
 
-.vacation-type {
+.task-item, .vacation-item {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task-subject, .vacation-type {
   font-weight: bold;
+  font-size: 18px;
+  color: #333;
+}
+
+.task-state, .vacation-dates, .vacation-days, .task-source {
+  font-size: 16px;
+  color: #666;
 }
 
 .request-vacation-button {
-  display: inline-block;
-  padding: 12px 24px;
-  margin-top: 20px;
-  font-size: 16px;
+  display: block;
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
   color: #fff;
   background-color: #007bff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  text-align: center;
+  transition: background-color 0.3s;
 }
 
 .request-vacation-button:hover {
   background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .header {
+    font-size: 28px;
+  }
+
+  .welcome {
+    font-size: 18px;
+  }
+
+  .tabs button {
+  padding: 10px 15px;
+  font-size: 14px;
+}
+
+
+  .tasks h2, .vacations h2 {
+    font-size: 20px;
+  }
+
+  .task-item, .vacation-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .task-subject, .vacation-type, .task-state, .vacation-dates, .vacation-days, .task-source {
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
 }
 </style>

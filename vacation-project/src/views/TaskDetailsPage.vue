@@ -1,26 +1,38 @@
 <template>
-  <div>
+  <div class="task-details-container">
     <h1>Task Details</h1>
 
     <!-- Loading State -->
-    <div v-if="isLoading">Loading...</div>
+    <div v-if="isLoading" class="loading">Loading...</div>
 
     <!-- Error State -->
     <div v-if="error" class="error">{{ error }}</div>
 
     <!-- Task Details -->
-    <div v-else>
-      <p><strong>Task Title:</strong> {{ task?.Properties?.Title || 'N/A' }}</p>
-      <p><strong>Status:</strong> {{ task?.Properties?.Status || 'N/A' }}</p>
+    <div v-else class="task-details">
+      <p><strong>Employee Name:</strong> {{ username || 'N/A' }}</p>
+      <p><strong>Status:</strong> <span :class="statusClass">{{ task?.Properties?.Status || 'N/A' }}</span></p>
       <p><strong>Type:</strong> {{ task?.Properties?.Type || 'N/A' }}</p>
       <p><strong>Start Date:</strong> {{ formattedStartDate }}</p>
       <p><strong>End Date:</strong> {{ formattedEndDate }}</p>
       <p><strong>Number of Days:</strong> {{ task?.Properties?.NumberOfDays || 'N/A' }}</p>
-      <button @click="approveTask" :disabled="task?.Properties?.Status != 'Pending'|| task?.Properties?.Status != 'Pending HR'">Approve</button>
-      <button @click="rejectTask"  :disabled="task?.Properties?.Status != 'Pending'|| task?.Properties?.Status != 'Pending HR'">Reject</button>
+      
+      <div class="button-group">
+        <button 
+          @click="approveTask" 
+          :disabled="task?.Properties?.Status === 'Approved' || task?.Properties?.Status === 'Rejected'">
+          Approve
+        </button>
+        <button 
+          @click="rejectTask" 
+          :disabled="task?.Properties?.Status === 'Rejected' || task?.Properties?.Status === 'Approved'">
+          Reject
+        </button>
+      </div>
     </div>
   </div>
 </template>
+
 
 <script>
 import axios from 'axios';
@@ -28,6 +40,7 @@ import axios from 'axios';
 export default {
   data() {
     return {
+      username: localStorage.getItem('user') || 'Guest',
       task: {},
       isLoading: true,
       error: null,
@@ -185,41 +198,72 @@ export default {
 
 <style scoped>
 /* Container Styling */
-div {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 30px;
-  background-color: #f4f4f4;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.task-details-container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 40px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
 }
 
 /* Heading Styling */
 h1 {
-  font-size: 24px;
+  font-size: 28px;
   color: #333;
-  margin-bottom: 20px;
-  font-family: 'Arial', sans-serif;
+  margin-bottom: 30px;
+  text-align: center;
+  font-weight: bold;
 }
 
 /* Task Details Styling */
-p {
-  font-size: 16px;
-  color: #555;
-  margin-bottom: 15px;
+.task-details p {
+  font-size: 18px;
+  color: #444;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+/* Status Styling */
+.status-pending {
+  color: #f0ad4e;
+  font-weight: bold;
+}
+
+.status-approved {
+  color: #5cb85c;
+  font-weight: bold;
+}
+
+.status-rejected {
+  color: #d9534f;
+  font-weight: bold;
+}
+
+/* Button Group Styling */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
 }
 
 /* Button Styling */
 button {
-  padding: 10px 20px;
-  font-size: 16px;
-  color: #fff;
+  flex: 1;
+  padding: 12px 0;
+  font-size: 18px;
+  color: #ffffff;
   background-color: #007bff;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  margin-right: 10px;
   transition: background-color 0.3s ease;
+  margin-right: 15px;
+}
+
+button:last-child {
+  margin-right: 0;
 }
 
 button:hover {
@@ -227,13 +271,23 @@ button:hover {
 }
 
 button:disabled {
-  background-color: #ccc;
+  background-color: #aaa;
   cursor: not-allowed;
 }
 
-/* Error Styling */
+/* Loading and Error Styling */
+.loading {
+  font-size: 20px;
+  color: #555;
+  text-align: center;
+  margin-top: 20px;
+}
+
 .error {
-  color: red;
+  color: #d9534f;
   font-weight: bold;
+  text-align: center;
+  margin-top: 20px;
 }
 </style>
+
